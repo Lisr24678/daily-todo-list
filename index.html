@@ -5,33 +5,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>每日待办清单</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
+      margin: 32px auto;
+      padding: 16px;
       background: #f4f7fb;
       color: #253047;
     }
-    h1 { text-align: center; }
+
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 24px;
+    }
+
     .app {
       background: white;
       padding: 24px;
       border-radius: 16px;
       box-shadow: 0 4px 18px #00000010;
     }
-    .date { text-align: center; color: #667085; margin-bottom: 20px; }
-    .input-row { display: flex; gap: 8px; }
+
+    #authArea {
+      padding: 16px;
+      margin-bottom: 20px;
+      background: #f7f9fd;
+      border: 1px solid #e1e7f0;
+      border-radius: 12px;
+    }
+
+    #authArea h2 {
+      margin-top: 0;
+      font-size: 19px;
+    }
+
+    input[type="email"],
     input[type="text"] {
-      flex: 1;
+      width: 100%;
       min-width: 0;
       padding: 12px;
       border: 1px solid #ccd3df;
       border-radius: 8px;
       font-size: 16px;
+      background: white;
     }
+
     button {
+      min-height: 44px;
       padding: 10px 14px;
       border: 0;
       border-radius: 8px;
@@ -40,7 +67,49 @@
       color: white;
       font-size: 15px;
     }
-    ul { list-style: none; padding: 0; }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #sendCodeButton,
+    #signOutButton {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    #signOutButton,
+    .delete {
+      background: #e5484d;
+    }
+
+    #authMessage {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .date {
+      text-align: center;
+      color: #667085;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-row input {
+      flex: 1;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
     li {
       display: flex;
       align-items: center;
@@ -48,119 +117,253 @@
       padding: 12px 0;
       border-bottom: 1px solid #edf0f5;
     }
-    li span { flex: 1; overflow-wrap: anywhere; }
-    li.done span { text-decoration: line-through; color: #8992a3; }
-    .delete { background: #e5484d; }
-    .summary { color: #667085; font-size: 14px; text-align: center; }
-    @media (max-width: 480px) {
-      body { margin: 12px auto; padding: 10px; }
-      .app { padding: 16px; }
-      .input-row { flex-wrap: wrap; }
+
+    li input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
     }
-    
-/* 手机和电脑布局优化 */
-body {
-  width: auto;
-  box-sizing: border-box;
-}
 
-.app {
-  width: 100%;
-  box-sizing: border-box;
-}
+    li span {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
 
-button,
-input[type="checkbox"] {
-  min-height: 44px;
-}
+    li.done span {
+      text-decoration: line-through;
+      color: #8992a3;
+    }
 
-input[type="text"] {
-  box-sizing: border-box;
-}
+    .summary {
+      color: #667085;
+      font-size: 14px;
+      text-align: center;
+    }
 
-@media (max-width: 480px) {
-  body {
-    margin: 12px auto;
-    padding: 10px;
-  }
+    [hidden] {
+      display: none !important;
+    }
 
-  .app {
-    padding: 16px;
-  }
+    @media (max-width: 480px) {
+      body {
+        margin: 12px auto;
+        padding: 10px;
+      }
 
-  .input-row {
-    flex-wrap: wrap;
-  }
+      .app {
+        padding: 16px;
+      }
 
-  .input-row input[type="text"] {
-    width: 100%;
-  }
+      .input-row {
+        flex-direction: column;
+      }
 
-  .input-row button {
-    width: 100%;
-  }
+      .input-row button {
+        width: 100%;
+      }
 
-  li {
-    gap: 8px;
-  }
-}
-
+      li {
+        gap: 8px;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="app">
     <h1>📝 每日待办清单</h1>
-    
-<div id="authArea">
-  <h3>邮箱登录</h3>
-  <input id="emailInput" type="email" placeholder="请输入邮箱地址">
-  <button id="sendCodeButton" type="button">发送登录链接</button>
-  <p id="authMessage">请先登录，再管理云端任务。</p>
-</div>
 
-    <div class="date" id="today"></div>
-    <div class="input-row">
-      <input id="taskInput" type="text" placeholder="请输入今天要做的事">
-      <button id="addButton">添加任务</button>
-    </div>
-    <ul id="taskList"></ul>
-    <p class="summary" id="summary">今天还没有任务</p>
+    <!-- 邮箱登录区域 -->
+    <section id="authArea">
+      <h2>邮箱登录</h2>
+
+      <input
+        id="emailInput"
+        type="email"
+        autocomplete="email"
+        placeholder="请输入邮箱地址"
+      >
+
+      <button id="sendCodeButton" type="button">
+        发送登录链接
+      </button>
+
+      <p id="authMessage" role="status" aria-live="polite">
+        请使用邮箱登录后管理自己的任务。
+      </p>
+
+      <button id="signOutButton" type="button" hidden>
+        退出登录
+      </button>
+    </section>
+
+    <!-- 未登录时隐藏整个任务区域 -->
+    <section id="taskArea" hidden>
+      <div class="date" id="today"></div>
+
+      <div class="input-row">
+        <input
+          id="taskInput"
+          type="text"
+          placeholder="请输入今天要做的事"
+        >
+        <button id="addButton" type="button">添加任务</button>
+      </div>
+
+      <ul id="taskList"></ul>
+      <p class="summary" id="summary">正在加载任务……</p>
+    </section>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const supabaseClient = window.supabase.createClient(
-  'https://eqannffukafbiydjtdds.supabase.co',
-  'sb_publishable_PVZ-q9olYwQeMwxMbHW9Rw_euN6-ZTl'
-);
-</script>
+  <!-- Supabase 浏览器客户端 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
+    // 第一步：填写自己的 Supabase 项目信息
+    const SUPABASE_URL = "在这里填写你的 Project URL";
+    const SUPABASE_PUBLISHABLE_KEY = "在这里填写你的 Publishable key";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    const authArea = document.getElementById("authArea");
+    const emailInput = document.getElementById("emailInput");
+    const sendCodeButton = document.getElementById("sendCodeButton");
+    const signOutButton = document.getElementById("signOutButton");
+    const authMessage = document.getElementById("authMessage");
+
+    const taskArea = document.getElementById("taskArea");
+    const taskInput = document.getElementById("taskInput");
+    const addButton = document.getElementById("addButton");
+    const taskList = document.getElementById("taskList");
+    const summary = document.getElementById("summary");
+    const todayElement = document.getElementById("today");
+
     const today = new Date().toLocaleDateString("sv-SE");
-    document.getElementById("today").textContent = "日期：" + today;
 
-    const storageKey = "daily-todo-" + today;
-    let tasks = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    todayElement.textContent = "日期：" + today;
 
-    function saveTasks() {
-      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    let currentUser = null;
+    let tasks = [];
+    let loadingTasks = false;
+
+    // 邮箱发送登录链接
+    sendCodeButton.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        authMessage.textContent = "请先输入邮箱地址。";
+        emailInput.focus();
+        return;
+      }
+
+      sendCodeButton.disabled = true;
+      authMessage.textContent = "正在发送登录链接……";
+
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo:
+              window.location.origin + window.location.pathname
+          }
+        });
+
+        if (error) {
+          authMessage.textContent = "发送失败：" + error.message;
+        } else {
+          authMessage.textContent =
+            "如果该邮箱可以登录，请检查收件箱，并点击登录链接返回本网站。";
+        }
+      } catch (error) {
+        authMessage.textContent = "操作失败，请稍后重试。";
+      } finally {
+        sendCodeButton.disabled = false;
+      }
+    });
+
+    // 退出登录
+    signOutButton.addEventListener("click", async () => {
+      signOutButton.disabled = true;
+
+      const { error } = await supabaseClient.auth.signOut();
+
+      signOutButton.disabled = false;
+
+      if (error) {
+        authMessage.textContent = "退出失败：" + error.message;
+      }
+    });
+
+    // 只读取当前登录用户当天的任务
+    async function loadTasks() {
+      if (!currentUser || loadingTasks) return;
+
+      loadingTasks = true;
+      summary.textContent = "正在加载云端任务……";
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("tasks")
+          .select("id, title, is_completed, task_date, user_id")
+          .eq("user_id", currentUser.id)
+          .eq("task_date", today)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        tasks = (data || []).map(task => ({
+          id: task.id,
+          text: task.title,
+          done: task.is_completed
+        }));
+
+        renderTasks();
+      } catch (error) {
+        summary.textContent =
+          "读取云端任务失败：" + error.message;
+      } finally {
+        loadingTasks = false;
+      }
     }
 
+    // 绘制任务列表
     function renderTasks() {
-      const list = document.getElementById("taskList");
-      list.innerHTML = "";
+      taskList.innerHTML = "";
 
-      tasks.forEach((task, index) => {
+      tasks.forEach(task => {
         const item = document.createElement("li");
-        if (task.done) item.classList.add("done");
+
+        if (task.done) {
+          item.classList.add("done");
+        }
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.done;
-        checkbox.addEventListener("change", () => {
-          tasks[index].done = checkbox.checked;
-          saveTasks();
+        checkbox.setAttribute("aria-label", "标记任务完成");
+
+        checkbox.addEventListener("change", async () => {
+          if (!currentUser) return;
+
+          checkbox.disabled = true;
+
+          const { error } = await supabaseClient
+            .from("tasks")
+            .update({ is_completed: checkbox.checked })
+            .eq("id", task.id)
+            .eq("user_id", currentUser.id);
+
+          if (error) {
+            authMessage.textContent =
+              "更新失败：" + error.message;
+            await loadTasks();
+            return;
+          }
+
+          task.done = checkbox.checked;
           renderTasks();
         });
 
@@ -170,77 +373,122 @@ const supabaseClient = window.supabase.createClient(
         const del = document.createElement("button");
         del.textContent = "删除";
         del.className = "delete";
-        del.addEventListener("click", () => {
-          tasks.splice(index, 1);
-          saveTasks();
+
+        del.addEventListener("click", async () => {
+          if (!currentUser) return;
+
+          del.disabled = true;
+
+          const { error } = await supabaseClient
+            .from("tasks")
+            .delete()
+            .eq("id", task.id)
+            .eq("user_id", currentUser.id);
+
+          if (error) {
+            authMessage.textContent =
+              "删除失败：" + error.message;
+            del.disabled = false;
+            return;
+          }
+
+          tasks = tasks.filter(item => item.id !== task.id);
           renderTasks();
         });
 
         item.append(checkbox, text, del);
-        list.appendChild(item);
+        taskList.appendChild(item);
       });
 
       const finished = tasks.filter(task => task.done).length;
-      document.getElementById("summary").textContent =
+
+      summary.textContent =
         `共 ${tasks.length} 项任务，已完成 ${finished} 项`;
     }
 
-    function addTask() {
-      const input = document.getElementById("taskInput");
-      const text = input.value.trim();
+    // 新增任务：直接写入 Supabase
+    async function addTask() {
+      if (!currentUser) return;
+
+      const text = taskInput.value.trim();
+
       if (!text) {
-        input.focus();
+        taskInput.focus();
         return;
       }
-      tasks.push({ text, done: false });
-      saveTasks();
-      renderTasks();
-      input.value = "";
-      input.focus();
+
+      addButton.disabled = true;
+
+      try {
+        const { error } = await supabaseClient
+          .from("tasks")
+          .insert({
+            title: text,
+            is_completed: false,
+            task_date: today,
+            user_id: currentUser.id
+          });
+
+        if (error) throw error;
+
+        taskInput.value = "";
+        await loadTasks();
+        taskInput.focus();
+      } catch (error) {
+        authMessage.textContent =
+          "保存任务失败：" + error.message;
+      } finally {
+        addButton.disabled = false;
+      }
     }
 
-    document.getElementById("addButton").addEventListener("click", addTask);
-    document.getElementById("taskInput").addEventListener("keydown", event => {
+    addButton.addEventListener("click", addTask);
+
+    taskInput.addEventListener("keydown", event => {
       if (event.key === "Enter") addTask();
     });
 
-    renderTasks();
-    
-const emailInput = document.getElementById("emailInput");
-const sendCodeButton = document.getElementById("sendCodeButton");
-const authMessage = document.getElementById("authMessage");
+    // 登录状态决定是否显示任务区域
+    async function handleSession(session) {
+      currentUser = session ? session.user : null;
 
-sendCodeButton.addEventListener("click", async () => {
-  const email = emailInput.value.trim();
+      taskArea.hidden = !currentUser;
+      signOutButton.hidden = !currentUser;
+      emailInput.disabled = !!currentUser;
+      sendCodeButton.hidden = !!currentUser;
 
-  if (!email) {
-    authMessage.textContent = "请先输入邮箱地址。";
-    return;
-  }
+      if (currentUser) {
+        authMessage.textContent =
+          "已登录邮箱：" + currentUser.email;
 
-  authMessage.textContent = "正在发送登录链接，请稍候……";
-
-  const { error } = await supabaseClient.auth.signInWithOtp({
-    email: email,
-    options: {
-      emailRedirectTo: window.location.href.split("?")[0]
+        await loadTasks();
+      } else {
+        tasks = [];
+        taskList.innerHTML = "";
+        summary.textContent = "请登录后查看任务。";
+        authMessage.textContent =
+          "请使用邮箱登录后管理自己的任务。";
+      }
     }
-  });
 
-  if (error) {
-    authMessage.textContent = "发送失败：" + error.message;
-  } else {
-    authMessage.textContent = "登录链接已发送，请检查邮箱。";
-  }
-});
+    // 处理初次打开、邮箱链接回跳和退出登录
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      // 避免在认证回调锁中直接执行数据库请求
+      setTimeout(() => {
+        handleSession(session);
+      }, 0);
+    });
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (session && session.user) {
-    authMessage.textContent =
-      "已登录邮箱：" + session.user.email;
-  }
-});
+    // 初次检查已有的登录状态
+    supabaseClient.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        authMessage.textContent =
+          "检查登录状态失败：" + error.message;
+        return;
+      }
 
+      handleSession(data.session);
+    });
   </script>
 </body>
 </html>
