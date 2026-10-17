@@ -110,6 +110,14 @@ input[type="text"] {
 <body>
   <div class="app">
     <h1>📝 每日待办清单</h1>
+    
+<div id="authArea">
+  <h3>邮箱登录</h3>
+  <input id="emailInput" type="email" placeholder="请输入邮箱地址">
+  <button id="sendCodeButton" type="button">发送登录链接</button>
+  <p id="authMessage">请先登录，再管理云端任务。</p>
+</div>
+
     <div class="date" id="today"></div>
     <div class="input-row">
       <input id="taskInput" type="text" placeholder="请输入今天要做的事">
