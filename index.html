@@ -57,6 +57,54 @@
       .app { padding: 16px; }
       .input-row { flex-wrap: wrap; }
     }
+    
+/* 手机和电脑布局优化 */
+body {
+  width: auto;
+  box-sizing: border-box;
+}
+
+.app {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button,
+input[type="checkbox"] {
+  min-height: 44px;
+}
+
+input[type="text"] {
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  body {
+    margin: 12px auto;
+    padding: 10px;
+  }
+
+  .app {
+    padding: 16px;
+  }
+
+  .input-row {
+    flex-wrap: wrap;
+  }
+
+  .input-row input[type="text"] {
+    width: 100%;
+  }
+
+  .input-row button {
+    width: 100%;
+  }
+
+  li {
+    gap: 8px;
+  }
+}
+
   </style>
 </head>
 <body>
