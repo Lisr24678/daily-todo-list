@@ -205,6 +205,42 @@ const supabaseClient = window.supabase.createClient(
     });
 
     renderTasks();
+    
+const emailInput = document.getElementById("emailInput");
+const sendCodeButton = document.getElementById("sendCodeButton");
+const authMessage = document.getElementById("authMessage");
+
+sendCodeButton.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    authMessage.textContent = "请先输入邮箱地址。";
+    return;
+  }
+
+  authMessage.textContent = "正在发送登录链接，请稍候……";
+
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email: email,
+    options: {
+      emailRedirectTo: window.location.href.split("?")[0]
+    }
+  });
+
+  if (error) {
+    authMessage.textContent = "发送失败：" + error.message;
+  } else {
+    authMessage.textContent = "登录链接已发送，请检查邮箱。";
+  }
+});
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (session && session.user) {
+    authMessage.textContent =
+      "已登录邮箱：" + session.user.email;
+  }
+});
+
   </script>
 </body>
 </html>
